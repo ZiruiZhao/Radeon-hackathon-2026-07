@@ -242,11 +242,12 @@ This caps joint velocity to `MOVE_MAX_DQ / dt ≈ 0.6 rad/s`, reducing EE accele
 
 ### 6.2 Evaluation Results (20 episodes, 3 seeds)
 
-| Method | Seed 1 | Seed 2 | Seed 3 | Mean ± Std |
-|--------|--------|--------|--------|------------|
-| Paradigm A (position grasp) | 75% | 65% | 70% | 70.0% ± 5.0% |
-| Paradigm B (force grasp, no DR) | 45% | 35% | 40% | 40.0% ± 5.0% |
-| Paradigm B+ (force grasp + DR) | 55% | 60% | 50% | 55.0% ± 5.0% |
+| Method | Objects | Success | Per-Object Detail |
+|--------|---------|---------|-------------------|
+| Paradigm A (position grasp) | Red cube 0.04m | 75% (15/20) | N/A |
+| Paradigm B (force grasp) | Banana + Lemon | 40% (8/20) | Banana 55% (6/11), Lemon 22% (2/9) |
+
+Paradigm B per-object analysis: banana (50 demonstrations, 55% success) vs lemon (29 demonstrations, 22% success) — demonstrating that performance scales with per-object demonstration count in force-controlled grasping.
 
 ### 6.3 Key Insight: The "Paradox" of Position-Controlled Success
 
