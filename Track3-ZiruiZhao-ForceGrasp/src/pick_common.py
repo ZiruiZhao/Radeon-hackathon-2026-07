@@ -17,8 +17,8 @@ import numpy as np
 from genesis_scene_utils import load_mesh, load_franka, mesh_aabb
 from scene_placement import add_placement_args, compute_workspace
 
-WORKSHOP_DIR = Path(__file__).resolve().parent.parent
-SCENES_DIR = WORKSHOP_DIR / "scenes"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SCENES_DIR = PROJECT_ROOT / "scenes"
 DEFAULT_SCENE = "rustic_kitchen"
 
 # ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ PLACEMENT_DEFAULTS = dict(
 # Scene config loading
 # ---------------------------------------------------------------------------
 def load_scene_config(scene_name: str) -> dict:
-    """Load ``scenes/<name>.json`` and resolve paths relative to workshop root."""
+    """Load ``scenes/<name>.json`` and resolve paths relative to project root."""
     path = SCENES_DIR / f"{scene_name}.json"
     if not path.exists():
         available = [p.stem for p in SCENES_DIR.glob("*.json")]
@@ -55,7 +55,7 @@ def load_scene_config(scene_name: str) -> dict:
         sys.exit(1)
     with open(path) as f:
         cfg = json.load(f)
-    cfg["asset_dir"] = WORKSHOP_DIR / cfg["asset_dir"]
+    cfg["asset_dir"] = PROJECT_ROOT / cfg["asset_dir"]
     cfg.setdefault("mesh_file", "*.glb")
     cfg.setdefault("scale", 1.0)
     cfg.setdefault("floor_z", 0.0)

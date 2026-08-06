@@ -138,7 +138,7 @@ def main():
     print(f"  trainable: {trainable_params:,} (~{trainable_params/1e6:.1f}M)")
     print(f"  frozen: {total_params - trainable_params:,}")
 
-    # AMP BF16 is always on when CUDA is available (workshop preset).
+    # AMP BF16 is always on when CUDA is available (default preset).
     amp_enabled = device.type == "cuda"
     amp_dtype = torch.bfloat16 if amp_enabled else None
     if amp_enabled:
