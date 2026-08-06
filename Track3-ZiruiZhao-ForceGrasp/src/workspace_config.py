@@ -1,13 +1,7 @@
 """
-Robot workspace placement — local-frame positioning.
-
-Design
-------
-Layer 1 (scene-independent): cube & cameras defined as offsets from robot base.
-Layer 2 (scene-specific): robot base position, yaw, workspace surface height.
-
-Coordinate frame: robot-local +X = forward, +Y = left, +Z = up.
-XY offsets are rotated by yaw; Z offsets are relative to *surface_z*.
+工作空间坐标配置
+机械臂可达范围、物体随机放置区域、相机位置等空间参数定义。
+支持机器人局部坐标系到世界坐标系的变换(to_world)。
 """
 from __future__ import annotations
 

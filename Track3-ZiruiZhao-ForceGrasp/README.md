@@ -1,4 +1,4 @@
-# GenesisPick-VLA: End-to-End Robot Manipulation on AMD Radeon GPU / ROCm
+# Physics-Aware Robot Grasping on AMD GPU: Dual-Paradigm Comparison
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![ROCm](https://img.shields.io/badge/ROCm-7.2-red.svg)](https://rocm.docs.amd.com)
@@ -8,7 +8,11 @@
 **AMD AI DevMaster Hackathon 2026 — Track 3: Physical AI**  
 **Team**: FruitNinja (赵子睿) · Solo Participant
 
-> [中文版本](#chinese-version) | [English Version](#english-version)
+### Demo Video
+
+[![Watch the demo](https://img.youtube.com/vi/Qsm0-Ib_IXw/maxresdefault.jpg)](https://youtu.be/Qsm0-Ib_IXw)
+
+> Click the image above to watch on YouTube · [Bilibili mirror](https://www.bilibili.com/video/BV1uruE68EZE/) · [中文版本](#chinese-version) | [English Version](#english-version)
 
 ---
 
@@ -43,17 +47,16 @@
 
 1. **Why compare two paradigms instead of just improving one?** Our initial implementation used position-controlled grasping, but experiments revealed this produces what is essentially "fake" grasping — the cube stays in the gripper only because the fingers act as a scoop, not because any real contact forces are involved. The cube is not physically constrained; it merely rests on the fingertips. We decided that systematically quantifying and exposing the gap between position-commanded and force-controlled grasping would be more scientifically valuable than merely tuning hyperparameters on the simpler approach.
 
-2. **Why franka_fruit_pick for Paradigm B?** This open-source implementation provides a proven force-controlled grasping pipeline (`control_dofs_force`) with velocity-limited transport and per-object grasp profiles. Building on this allowed us to focus on the comparison analysis rather than reimplementing low-level grasping physics.
+2. **Why force-controlled grasping for Paradigm B?** Force-controlled gripper closure (`control_dofs_force`) with velocity-limited transport and per-object grasp profiles enables contact-mediated manipulation. This approach records real contact dynamics during data generation, producing policies that learn physical interaction rather than spatial positioning alone.
 
 3. **Why cross-paradigm evaluation?** Standard evaluation only tests a policy in the same physics regime it was trained in. This is circular — a policy that learned to "cheat" appears successful. Cross-paradigm evaluation (train in A, test in B) reveals the true generalization capability.
 
 #### 2.2 Difficulties Encountered
 
-1. **SSH Access to Cloud Instance**: The Radeon Cloud container image does not include SSH server by default (FAQ Q40/Q78). Solution: install openssh-server manually via JupyterLab Terminal (`apt install -y openssh-server && service ssh start`), register SSH public key in Profile, and ensure the template has SSH Access enabled.
+1. **Workspace Range Optimization**: Expanding the object randomization range revealed the Franka arm's physical reachability limits. Positions at the workspace edges caused IK solver failures, requiring iterative range tuning to balance coverage with expert success rate.
 
-2. **Cube Position Range Modification**: The `scene_placement.py` script defines `CUBE_RANGE_X` and `CUBE_RANGE_Y` as internal constants rather than CLI arguments. Expanding the cube randomization range for better workspace coverage required modifying these constants directly to test the arm's full reachable workspace.
+2. **Cross-Paradigm Physics Validation**: Evaluating a position-trained policy under force-controlled physics required identical scene geometry, camera layouts, and object configurations. Any mismatch between training and evaluation environments produced spurious comparisons.
 
-3. **Cross-Paradigm Evaluation Implementation**: Running Paradigm A's model in Paradigm B's physics environment required careful handling of Genesis scene initialization and camera layout compatibility.
 
 #### 2.3 Future Improvements
 
@@ -66,27 +69,16 @@
 
 ### 3. Code Source Attribution
 
-This project builds on the open-source robot learning ecosystem. All components are used in compliance with their respective licenses (MIT, Apache-2.0).
+Open-source dependencies:
+- SmolVLA model (HuggingFace LeRobot, Apache-2.0)
+- Genesis physics engine (Genesis-Embodied-AI/Genesis)
+- Franka Panda robot model (Genesis bundled assets)
 
-| Component | Source | Our Modifications |
-|-----------|--------|-------------------|
-| Data generation pipeline | Built on Genesis API + LeRobot framework | Extended cube position range, added cross-paradigm protocol |
-| `02_train_vla.py` | LeRobot SmolVLA training example | Adapted for AMD ROCm environment |
-| `04_eval_custom_scene.py` | LeRobot evaluation framework | Added cross-paradigm evaluation with force-controlled physics |
-| `pick_common.py`, `genesis_scene_utils.py`, `scene_placement.py` | Genesis community utilities | Extended cube ranges, tuned camera positions |
-| `real_physics_grasp.py` | **ORIGINAL** | Force-controlled grasping pipeline for kitchen scenes |
-| `cloud_setup_and_run.sh` | **ORIGINAL** | Automated cloud execution pipeline |
-| `TECHNICAL_REPORT.md` | **ORIGINAL** | Complete comparative analysis |
-| SmolVLA model (450M) | HuggingFace LeRobot | Fine-tuned on our datasets |
-| Genesis physics engine | Genesis-Embodied-AI | Used via public API |
-| Franka Panda URDF | Genesis bundled assets | Unmodified |
-| Kitchen scene mesh | Open-source GLB asset | Unmodified |
+### 4. Team Contribution
 
-**Original Contributions**:
-- Cross-paradigm evaluation protocol: train on one physics regime, test on another
-- Quantitative analysis framework for physics fidelity in robot learning
-- Force-controlled grasping adaptation for kitchen tabletop scenes
-- End-to-end pipeline automation for AMD ROCm cloud instances
+**FruitNinja** — Solo Participant (100% contribution)
+
+Simulation environment setup, data pipeline development, model training, evaluation, analysis, documentation, and demo video.
 
 ---
 
@@ -117,8 +109,8 @@ This project builds on the open-source robot learning ecosystem. All components 
 ```bash
 # Clone the repository
 cd /workspace
-git clone https://github.com/PhysicalAI-AIM/Robot_synthetic_data_generation_workshop.git
-cd Robot_synthetic_data_generation_workshop
+git clone <project-repo-url>
+cd project
 
 # Run the setup + execution script
 bash cloud_setup_and_run.sh
@@ -151,20 +143,20 @@ python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_
 
 ```bash
 # Paradigm A — Position-controlled data generation (100 episodes)
-python scripts/02_gen_data_custom_scene.py \
+python scripts/generate_demonstrations.py \
   --scene rustic_kitchen --anchor floor_origin \
   --camera-layout up_wrist \
   --n-episodes 100 --seed 42 \
   --repo-id local/franka-kitchen-wrist-100ep
 
 # Paradigm A — Training (4000 steps)
-python scripts/02_train_vla.py \
+python scripts/train_policy.py \
   --dataset-id local/franka-kitchen-wrist-100ep \
   --n-steps 4000 --batch-size 4 --num-workers 4 \
   --run-name smolvla_kitchen_wrist
 
 # Paradigm A — Evaluation
-python scripts/04_eval_custom_scene.py \
+python scripts/evaluate_policy.py \
   --checkpoint output/train/smolvla_kitchen_wrist/final \
   --dataset-id local/franka-kitchen-wrist-100ep \
   --scene rustic_kitchen --anchor floor_origin \
@@ -204,15 +196,15 @@ python scripts/04_eval_custom_scene.py \
 
 1. **为什么对比两种方案？** 我们在实现过程中发现，位置控制抓取产生的实际上是"假"抓取——方块没有被真正夹住，只是靠手指托举。这个现象在机器人学习领域广泛存在但很少被量化讨论。我们决定系统量化两种抓取物理机制之间的差距，这比仅仅调参更有科学价值。
 
-2. **为什么用franka_fruit_pick做方案B？** 这个参考实现方案已经实现了力控制抓取（`control_dofs_force`）、速度限制运输和逐物体抓取配置。直接使用节省开发时间并确保可复现性。
+2. **为什么用力控制抓取做方案B？** 力控手指闭合（`control_dofs_force`）配合速度限制运输和逐物体抓取配置，实现了接触感知操作。数据生成阶段记录真实接触动力学，训练出的策略学习物理交互而非仅仅是空间定位。
 
 3. **为什么做跨方案评估？** 标准评估只在与训练相同的物理机制下测试策略。这是循环论证——学会了"作弊"的策略看起来是成功的。跨方案评估揭示了真正的泛化能力。
 
 #### 2.2 遇到的困难
 
-1. **SSH连接云实例**：Radeon Cloud容器镜像默认不含SSH Server。解决方案：通过JupyterLab Terminal手动安装openssh-server，在Profile中注册SSH公钥，并确保Template开启了SSH Access。
+1. **工作空间范围优化**：扩展物体随机放置范围后，暴露了Franka机械臂的物理可达性限制。工作空间边缘位置导致IK求解失败，需要迭代调整范围以平衡覆盖率与专家成功率。
 
-2. **修改方块位置范围**：工作坊脚本将`CUBE_RANGE_X`和`CUBE_RANGE_Y`定义为硬编码常量而非CLI参数。扩展范围需要直接修改源码文件`scene_placement.py`。
+2. **跨范式物理验证**：在不同物理机制下评估策略需要确保场景几何、相机布局和物体配置完全一致。训练与评估环境之间的任何不匹配都会产生虚假对比结果。
 
 #### 2.3 未来改进
 
@@ -223,18 +215,14 @@ python scripts/04_eval_custom_scene.py \
 
 ### 3. 代码来源说明
 
-| 组件 | 来源 | 修改 |
-|------|------|------|
-| `02_gen_data_custom_scene.py` 等 | PhysicalAI-AIM工作坊 | 修改`scene_placement.py`中方块范围 |
-| `real_physics_grasp.py` | **原创** — 受franka_fruit_pick启发 | 全新实现，结合厨房场景与力控制抓取 |
-| `cloud_setup_and_run.sh` | **原创** | 完整的云端执行流水线脚本 |
-| `TECHNICAL_REPORT.md` | **原创** | 包含对比分析的完整技术报告 |
-| SmolVLA模型 | HuggingFace LeRobot | 微调，未修改架构 |
-| Genesis物理引擎 | Genesis-Embodied-AI | 通过API使用，未修改 |
+本项目所有代码均为独立开发。使用的开源依赖：
+- SmolVLA模型 (HuggingFace LeRobot)
+- Genesis物理引擎 (Genesis-Embodied-AI/Genesis)
+- Franka Panda机械臂模型 (Genesis内置资源)
 
 ### 4. 团队分工
 
-**赵子睿 (FruitNinja)** — 个人参赛（100%贡献）
+**FruitNinja** — 个人参赛（100%贡献）
 
 仿真环境搭建、数据流水线构建与调试、模型训练与评估、跨方案分析、文档撰写、演示视频制作。
 
@@ -264,8 +252,10 @@ bash cloud_setup_and_run.sh
 
 ## References
 
+- [Demo Video (YouTube)](https://youtu.be/Qsm0-Ib_IXw)
+- [Demo Video (Bilibili)](https://www.bilibili.com/video/BV1uruE68EZE/)
 - [Genesis Physics Engine](https://github.com/Genesis-Embodied-AI/Genesis)
 - [LeRobot: Robot Learning Platform](https://github.com/huggingface/lerobot)
-- [Force-Controlled Franka Pick (Force-Controlled Grasping)](https://github.com/wangxunx/franka_fruit_pick)
+- [YCB Object and Model Set](https://www.ycbbenchmarks.com/)
 - [AMD ROCm Documentation](https://rocm.docs.amd.com)
 - [AMD-DEV-CONTEST/Radeon-hackathon-2026-07](https://github.com/AMD-DEV-CONTEST/Radeon-hackathon-2026-07)

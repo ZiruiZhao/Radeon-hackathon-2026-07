@@ -1,31 +1,6 @@
 """
-Genesis scene utilities — generic API for loading assets and rendering
-with correct OpenGL-compatible coordinate handling.
-
-Coordinate conventions:
-    - Genesis world: right-handed, Z-up
-    - glTF / GLB:    right-handed, Y-up  (may appear mirrored when loaded)
-    - OpenGL image:  origin at bottom-left → needs vertical flip for PNG
-
-Typical usage:
-    from genesis_scene_utils import (
-        ensure_display, load_mesh, load_franka, set_franka_home,
-        render_rgb, save_image,
-    )
-
-    ensure_display()
-    import genesis as gs
-    gs.init(backend=gs.gpu)
-
-    scene = gs.Scene(...)
-    kitchen = load_mesh(scene, gs, "kitchen.glb", opengl_correct=True)
-    franka  = load_franka(scene, gs, pos=(0, 0, 0))
-    cam     = scene.add_camera(...)
-    scene.build()
-    set_franka_home(franka)
-
-    img = render_rgb(cam)
-    save_image(img, "out.png")
+Genesis仿真工具函数
+Franka机械臂加载、逆运动学求解、关节PD控制、相机渲染等底层操作。
 """
 from __future__ import annotations
 

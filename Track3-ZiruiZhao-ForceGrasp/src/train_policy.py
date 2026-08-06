@@ -1,8 +1,8 @@
 """
-SmolVLA模型微调训练（方案A位置控制抓取）
+SmolVLA模型微调训练（方案A 位置控制抓取）
 在LeRobot格式专家示范数据集上微调SmolVLA(450M)视觉语言动作模型。
-视觉编码器(SigLIP,400M)冻结，仅训练语言骨干(40M)和动作专家头(10M)。
-输入: 双路RGB(640x480) + 9D关节 + 任务文字。输出: 9D关节目标位置。
+SigLIP视觉编码器(350M)冻结。仅训练SmolLM2骨干(40M)和动作专家头(10M)。
+BF16混合精度 + SDPA自适应注意力。输入双路RGB+关节状态，输出9D目标关节位置。
 """
 
 from __future__ import annotations

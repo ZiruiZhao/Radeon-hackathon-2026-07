@@ -1,8 +1,7 @@
 """
-Scene-agnostic scene builder for pick tasks.
-
-Loads scene config from ``scenes/<name>.json``, places Franka + cube + cameras.
-Used by 02_gen_data_custom_scene.py and 04_eval_custom_scene.py.
+Genesis仿真场景构建器
+加载厨房场景配置(JSON+GLB)。放置Franka机械臂、目标物体和双相机。
+支持多个预设anchor位置。配置碰撞检测、物理材质和GPU渲染后端。
 """
 from __future__ import annotations
 

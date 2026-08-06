@@ -170,7 +170,7 @@ This caps joint velocity to `MOVE_MAX_DQ / dt ≈ 0.6 rad/s`, reducing EE accele
 | Friction | cube=1.5, table=2.0 |
 | Grasp type | Position-controlled |
 
-### 4.2 Paradigm B Dataset (Force-Controlled — franka_fruit_pick)
+### 4.2 Paradigm B Dataset (Force-Controlled Grasping)
 
 | Property | Value |
 |----------|-------|
@@ -319,8 +319,6 @@ All code, datasets, and evaluation scripts are open-sourced, providing a reprodu
 
 **FruitNinja (赵子睿)** — Solo Participant
 
-- M.Sc. Electrical Engineering, Columbia University
-- 15+ years embodied AI, algorithms, hardware integration
 - Role: End-to-end implementation, experiment design, analysis, documentation
 - GitHub: [ziruizhao](https://github.com/ziruizhao) | Email: zz2220cu@163.com
 
@@ -332,4 +330,4 @@ All code, datasets, and evaluation scripts are open-sourced, providing a reprodu
 2. LeRobot: Robot Learning Platform. HuggingFace, 2024.
 3. SmolVLA: Vision-Language-Action Models for Robot Manipulation. HuggingFace, 2025.
 4. AMD ROCm Documentation. https://rocm.docs.amd.com, 2026.
-5. Force-Controlled Franka Pick: Force-Controlled Grasping for Robot Manipulation. wangxunx, 2026.
+5. YCB Object and Model Set: Benchmarks for Robotic Manipulation. Yale-CMU-Berkeley, 2015.
